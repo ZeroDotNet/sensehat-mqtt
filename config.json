@@ -1,8 +1,17 @@
 {
-   "id" : "sensehat-mqtt",
+   "id" : "homeassistant/sensehat",
+   "seconds": 15,
    "topics" : {
-      "humidity" : "sensehat/humidity",
-      "temperature" : "sensehat/temp"
+    "config" : "config",
+    "state" : "state",
+    "humidity" : "homeassistant/sensor/rpi/humidity",
+    "pressure": "homeassistant/sensor/rpi/pressure",
+    "temperature": "homeassistant/sensor/rpi/temperature",
+    "temp_avg": "homeassistant/sensor/rpi/temperature/avg",
+    "temp_room": "homeassistant/sensor/rpi/temperature/room",
+    "temp_cpu": "homeassistant/sensor/rpi/temperature/cpu",
+    "cpu": "homeassistant/sensor/rpi/cpu",
+    "json": "homeassistant/sensor/rpi/debug"
    },
    "broker" : {
       "port" : 1883,
