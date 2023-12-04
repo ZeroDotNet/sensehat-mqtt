@@ -1,10 +1,19 @@
-import os
+"""
+Represents a SenseHat device and provides methods to calculate various metrics.
+:copyright: (c) 2022-present Dan Rodrigues
+:license: MIT, see LICENSE for more details.
+"""
+from typing import Dict
 import datetime
-
+import os
 from sense_hat import SenseHat
 
 
 class SenseHatDevice:
+    """
+    Represents a SenseHat device and provides methods to calculate various metrics.
+    """
+
     def __init__(self, config):
         """
         Initializes a new instance of the class with the provided configuration.
@@ -14,19 +23,17 @@ class SenseHatDevice:
 
         Returns:
             None
-
-        Parameters
-        ----------
-        config
-
-        Returns
-        -------
-        SenseHatDevice
         """
+        # Initialize the SenseHat device
         self.sense = SenseHat()
-        #self.sense.show_message(config["id"])
+
+        # Show a message on the SenseHat display
         self.sense.show_message("Starting")
+
+        # Clear the SenseHat display
         self.sense.clear()
+
+        # Store the configuration object
         self.cfg = config
 
     def get_temperature(self):
@@ -46,7 +53,7 @@ class SenseHatDevice:
         """Get the pressure value from the SenseHat sensor."""
         return self.sense.get_pressure()
 
-    def message_config_humidity(self, sensor) -> object:
+    def message_config_humidity(self, sensor) -> Dict[str, str]:
         """Generate a message configuration for the humidity sensor.
 
         Parameters
@@ -76,7 +83,7 @@ class SenseHatDevice:
         }
         return message
 
-    def message_config_pressure(self, sensor):
+    def message_config_pressure(self, sensor) -> Dict[str, str]:
         """Generate a message configuration for the pressure sensor.
 
         Parameters
@@ -102,7 +109,7 @@ class SenseHatDevice:
         }
         return message
 
-    def message_config_temperature(self, sensor):
+    def message_config_temperature(self, sensor) -> Dict[str, str]:
         """Generate a message configuration for the temperature sensor.
 
         Parameters
@@ -129,7 +136,7 @@ class SenseHatDevice:
         }
         return message
 
-    def message_config_cpu_temperature(self, sensor):
+    def message_config_cpu_temperature(self, sensor) -> Dict[str, str]:
         """
         Generates a message configuration for CPU temperature sensor.
 
@@ -168,7 +175,8 @@ class SenseHatDevice:
         }
         return message
 
-    def calculate_metrics(self) -> dict[str, float | dict[str, str]] | None:
+    # def calculate_metrics(self) -> dict[str, float | dict[str, str]] | None:
+    def calculate_metrics(self) -> Dict[str, float | Dict[str, str]]:
         """
         Calculates various metrics including temperature, humidity, and pressure.
 
@@ -224,7 +232,9 @@ class SenseHatDevice:
             + humidity_str
             + ', "temperature": '
             + temp_room_str
-            + ', timestamp: "' + str(current_time) + '" }'
+            + ', timestamp: "'
+            + str(current_time)
+            + '" }'
         )
         formatted_values = {
             "temp_room": temp_room_str,
@@ -241,6 +251,6 @@ class SenseHatDevice:
             "humidity": humidity,
             "pressure": pressure,
             "messages": formatted_values,
-            "timestamp": current_time
+            "timestamp": current_time,
         }
         return result
