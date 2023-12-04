@@ -7,6 +7,6 @@ else
     source /home/npascual/code/.env/bin/activate
 fi
 # source /home/npascual/code/.env/bin/activate
-cd /home/npascual/code/sensehat-mqtt
-python publish.py 
+cd /home/npascual/code/sensehat-mqtt/src
+python publish.py
 #exit 0

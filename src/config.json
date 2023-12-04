@@ -8,14 +8,14 @@
       "humidity": "homeassistant/sensor/rpi/humidity",
       "pressure": "homeassistant/sensor/rpi/pressure",
       "temperature": "homeassistant/sensor/rpi/temperature",
-      "temp_avg": "homeassistant/sensor/rpi/temperature/avg",
-      "temp_room": "homeassistant/sensor/rpi/temperature/room",
-      "temp_cpu": "homeassistant/sensor/rpi/temperature/cpu",
+      "temp_avg": "homeassistant/sensor/rpi/avg",
+      "temp_room": "homeassistant/sensor/rpi/room",
+      "temp_cpu": "homeassistant/sensor/rpi/cpu",
       "cpu": "homeassistant/sensor/rpi/cpu",
       "json": "homeassistant/sensor/rpi/debug"
    },
    "broker": {
-      "port": 1883,
-      "host": "127.0.0.1"
+      "port": 8883,
+      "host": "192.168.1.102"
    }
 }
