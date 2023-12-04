@@ -8,12 +8,12 @@ import time
 import ssl
 
 # import paho.mqtt.client
-from paho.mqtt.client import Client, MQTT_CLEAN_START_FIRST_ONLY
+import paho.mqtt.client
 from paho.mqtt.client import MQTTMessageInfo
 from paho.mqtt.client import MQTTMessage
 
 # from sensehatdevice import SenseHatDevice
-from .sensehatdevice import SenseHatDevice
+from sensehatdevice import SenseHatDevice
 
 
 def load_configuration() -> dict:
@@ -69,7 +69,7 @@ def validate_configuration(init_config):
         sys.exit(1)
 
 
-def build_mqtt() -> Client:
+def build_mqtt() -> paho.mqtt.client.Client:
     """
 
     Returns
@@ -83,10 +83,12 @@ def build_mqtt() -> Client:
     # Generate a ClientId
     client_id_alt = str(cfg["id"])  # type: ignore
     tls_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    tls_context.load_cert_chain(certfile="../server.crt", keyfile="../server.key")
-
-    build_client = Client(
-        client_id=client_id_alt, clean_session=True, reconnect_on_failure=True
+    tls_context.load_cert_chain(certfile="../server.crt", keyfile="../server.key", password="majestic")
+    tls_context.load_default_certs(purpose=ssl.Purpose.SERVER_AUTH)
+    tls_context.load_verify_locations(cafile="../ca.crt")
+    tls_context.password = "majestic"
+    build_client = paho.mqtt.client.Client(
+        client_id=client_id_alt, clean_session=True, userdata=None, protocol=paho.mqtt.client.MQTTv311, transport="tcp"
     )
     username = "admin"
     password = "majestic"
@@ -131,7 +133,7 @@ def print_info(client, userData, resultCode, logHeader) -> None:
     logHeader
     resultCode
     """
-    if client is Client:
+    if client is paho.mqtt.client.Client:
         print(f"[{logHeader}] Client: {client._host} - {client._client_id}")
 
     print(f"[{logHeader}] UserData: {userData}")
@@ -150,7 +152,7 @@ def print_info(client, userData, resultCode, logHeader) -> None:
 
 
 # Función para manejar la conexión con el broker MQTT
-def on_connect(client: Client, userdata, flags, rc):
+def on_connect(client: paho.mqtt.client.Client, userdata, flags, rc):
     if rc is int:
         if rc == 0:
             print("[on_connect] Connected al broker MQTT")
@@ -262,7 +264,7 @@ def on_message(client, userdata, msg):
 
 
 def publish(
-    client: Client, topic: str, msg: str, retain: bool = False, qos: int = 0
+    client: paho.mqtt.client.Client, topic: str, msg: str, retain: bool = False, qos: int = 0
 ) -> MQTTMessageInfo:
     msg_count = 1
     while True:
@@ -289,7 +291,7 @@ def publish(
     return result
 
 
-def mqtt_connect(param_client: Client):
+def mqtt_connect(param_client: paho.mqtt.client.Client):
     """
     Connects the MQTT client to the broker and publishes an "online" message.
 
@@ -307,7 +309,7 @@ def mqtt_connect(param_client: Client):
         cfg["broker"]["host"],
         port=cfg["broker"]["port"],
         keepalive=60,
-        clean_start=MQTT_CLEAN_START_FIRST_ONLY,
+        clean_start=paho.mqtt.client.MQTT_CLEAN_START_FIRST_ONLY,
     )
     # Publish an "online" message
     topic = cfg["id"] + cfg["topics"]["availability"]
@@ -347,7 +349,7 @@ if __name__ == "__main__":
             publish(
                 mqtt_client,
                 cfg["topics"]["humidity"] + cfg["topics"]["state"],
-                metrics.["humidity"],
+                metrics["humidity"],
                 retain=False,
             )
             time.sleep(0.25)

@@ -28,7 +28,7 @@ class SenseHatDevice:
         self.sense = SenseHat()
 
         # Show a message on the SenseHat display
-        self.sense.show_message("Starting")
+        #self.sense.show_message("Starting")
 
         # Clear the SenseHat display
         self.sense.clear()
