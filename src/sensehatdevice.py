@@ -6,6 +6,7 @@ Represents a SenseHat device and provides methods to calculate various metrics.
 from typing import Dict
 import datetime
 import os
+import sys
 from sense_hat import SenseHat
 
 
@@ -14,7 +15,7 @@ class SenseHatDevice:
     Represents a SenseHat device and provides methods to calculate various metrics.
     """
 
-    def __init__(self, config):
+    def __init__(self, config: Dict[str, str | Dict[str, str]] | None):
         """
         Initializes a new instance of the class with the provided configuration.
 
@@ -24,17 +25,43 @@ class SenseHatDevice:
         Returns:
             None
         """
+
+        def validate_configuration(init_config: Dict[str, str] | None):
+            """
+            Validate the configuration to ensure it has all the required fields.
+            """
+            # Check if 'id' field exists
+            if "id" not in init_config:
+                sys.stderr.write("No 'id' field in configuration.\n")
+                sys.exit(1)
+
+            # Check if 'broker' field exists
+            if "broker" not in init_config:
+                sys.stderr.write("No 'broker' field in configuration.\n")
+                sys.exit(1)
+
+            # Check if 'topics' field exists
+            if "topics" not in init_config:
+                sys.stderr.write("No 'topics' field in configuration.\n")
+                sys.exit(1)
+
+            # Check if 'seconds' field exists
+            if "seconds" not in init_config:
+                sys.stderr.write("No 'seconds' field in configuration.\n")
+                sys.exit(1)
+
+        # Store the configuration object
+        self.cfg = config
+        validate_configuration(self.cfg)
+
         # Initialize the SenseHat device
         self.sense = SenseHat()
 
         # Show a message on the SenseHat display
-        #self.sense.show_message("Starting")
+        # self.sense.show_message("Starting")
 
         # Clear the SenseHat display
         self.sense.clear()
-
-        # Store the configuration object
-        self.cfg = config
 
     def get_temperature(self):
         """
@@ -53,7 +80,7 @@ class SenseHatDevice:
         """Get the pressure value from the SenseHat sensor."""
         return self.sense.get_pressure()
 
-    def message_config_humidity(self, sensor) -> Dict[str, str]:
+    def message_config_humidity(self, sensor) -> Dict[str, str | Dict[str, str]]:
         """Generate a message configuration for the humidity sensor.
 
         Parameters
@@ -66,8 +93,7 @@ class SenseHatDevice:
         """
         message = {
             "device_class": "humidity",
-            "availability_topic": self.cfg["topics"][sensor]
-            + self.cfg["topics"]["availability"],
+            "availability_topic": self.cfg["id"] + self.cfg["topics"]["availability"],
             "state_topic": self.cfg["topics"][sensor] + self.cfg["topics"]["state"],
             "unit_of_measurement": "%",
             "icon": "mdi:water-percent",
@@ -92,8 +118,7 @@ class SenseHatDevice:
         """
         message = {
             "device_class": "pressure",
-            "availability_topic": self.cfg["topics"][sensor]
-            + self.cfg["topics"]["availability"],
+            "availability_topic": self.cfg["id"] + self.cfg["topics"]["availability"],
             "state_topic": self.cfg["topics"][sensor] + self.cfg["topics"]["state"],
             "unit_of_measurement": "hPa",
             "icon": "mdi:axis-arrow",
@@ -118,8 +143,7 @@ class SenseHatDevice:
         """
         message = {
             "device_class": "temperature",
-            "availability_topic": self.cfg["topics"][sensor]
-            + self.cfg["topics"]["availability"],
+            "availability_topic": self.cfg["id"] + self.cfg["topics"]["availability"],
             "state_topic": self.cfg["topics"][sensor] + self.cfg["topics"]["state"],
             "unit_of_measurement": "°C",
             "temperature_unit": "C",
@@ -153,8 +177,7 @@ class SenseHatDevice:
         """
         message = {
             "device_class": "temperature",
-            "availability_topic": self.cfg["topics"][sensor]
-            + self.cfg["topics"]["availability"],
+            "availability_topic": self.cfg["id"] + self.cfg["topics"]["availability"],
             "state_topic": self.cfg["topics"][sensor] + self.cfg["topics"]["state"],
             "unit_of_measurement": "°C",
             "temperature_unit": "C",
@@ -175,8 +198,15 @@ class SenseHatDevice:
         }
         return message
 
+
+    def show_message(self, message):
+        #self.sense.clear()
+        self.sense.show_message(message)
+
+
+
     # def calculate_metrics(self) -> dict[str, float | dict[str, str]] | None:
-    def calculate_metrics(self) -> Dict[str, float | Dict[str, str]]:
+    def calculate_metrics(self) -> Dict[str, str | Dict[str, str]]:
         """
         Calculates various metrics including temperature, humidity, and pressure.
 
@@ -193,8 +223,8 @@ class SenseHatDevice:
         temp_room = round(
             number=float(
                 (
-                    self.sense.get_temperature_from_pressure()
-                    + self.sense.get_temperature_from_humidity()
+                        self.sense.get_temperature_from_pressure()
+                        + self.sense.get_temperature_from_humidity()
                 )
                 / 2
             ),
@@ -220,21 +250,21 @@ class SenseHatDevice:
         pressure_str = str(pressure)
         current_time = datetime.datetime.now()
         json_str = (
-            '{ "avg": '
-            + temp_avg_str
-            + ', "room": '
-            + temp_room_str
-            + ', "cpu": '
-            + temp_cpu_str
-            + ', "pressure": '
-            + pressure_str
-            + ', "humidity": '
-            + humidity_str
-            + ', "temperature": '
-            + temp_room_str
-            + ', timestamp: "'
-            + str(current_time)
-            + '" }'
+                '{ "avg": '
+                + temp_avg_str
+                + ', "room": '
+                + temp_room_str
+                + ', "cpu": '
+                + temp_cpu_str
+                + ', "pressure": '
+                + pressure_str
+                + ', "humidity": '
+                + humidity_str
+                + ', "temperature": '
+                + temp_room_str
+                + ', timestamp: "'
+                + str(current_time)
+                + '" }'
         )
         formatted_values = {
             "temp_room": temp_room_str,

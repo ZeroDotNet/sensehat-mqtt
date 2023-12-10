@@ -1,0 +1,23 @@
+[Unit]
+Description=SenseHAT MQTT broadcaster * Fork
+Documentation=https://github.com/cgomesu/rpi-sensehat-mqtt
+# This MQTT service requires the network to be online for it to work
+After=network-online.target
+
+[Service]
+Type=simple
+# User must match folder permission and user with the required Python packages
+User=npascual
+#Group=GROUP
+# Edit paths if different than default
+WorkingDirectory = /home/npascual/code/sensehat-mqtt/src
+ExecStart=/usr/bin/python3 publish.py
+# Restart options
+Restart=always
+RestartSec=15
+# Tell how systemd should kill this process
+KillMode=process
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

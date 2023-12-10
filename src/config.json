@@ -1,21 +1,31 @@
 {
-   "id": "homeassistant/sensehat",
-   "seconds": 30,
-   "topics": {
-      "config": "/config",
-      "state": "/state",
-      "availability": "/availability",
-      "humidity": "homeassistant/sensor/rpi/humidity",
-      "pressure": "homeassistant/sensor/rpi/pressure",
-      "temperature": "homeassistant/sensor/rpi/temperature",
-      "temp_avg": "homeassistant/sensor/rpi/avg",
-      "temp_room": "homeassistant/sensor/rpi/room",
-      "temp_cpu": "homeassistant/sensor/rpi/cpu",
-      "cpu": "homeassistant/sensor/rpi/cpu",
-      "json": "homeassistant/sensor/rpi/debug"
-   },
-   "broker": {
-      "port": 8883,
-      "host": "192.168.1.102"
-   }
+  "id": "homeassistant/sensor/rpi",
+  "seconds": 60,
+  "topics": {
+    "config": "/config",
+    "state": "/state",
+    "availability": "/availability",
+    "humidity": "homeassistant/sensor/rpi/humidity",
+    "pressure": "homeassistant/sensor/rpi/pressure",
+    "temperature": "homeassistant/sensor/rpi/temperature",
+    "temp_avg": "homeassistant/sensor/rpi/avg",
+    "temp_room": "homeassistant/sensor/rpi/room",
+    "temp_cpu": "homeassistant/sensor/rpi/cpu",
+    "cpu": "homeassistant/sensor/rpi/cpu",
+    "json": "homeassistant/sensor/rpi/debug"
+  },
+  "client": {
+    "ca_certs": "/home/npascual/code/sensehat-mqtt/src/ca.crt",
+    "certfile": "/home/npascual/code/sensehat-mqtt/src/server.crt",
+    "keyfile": "/home/npascual/code/sensehat-mqtt/src/server.key",
+    "keyfile_password": "majestic",
+    "cleansession": true,
+    "insecure": true
+  },
+  "broker": {
+    "port": 8883,
+    "host": "hass.hawkantsoftware.com",
+    "username": "admin",
+    "password": "majestic"
+  }
 }
