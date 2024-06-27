@@ -163,13 +163,18 @@ def on_connect(client: paho.mqtt.client.Client, userdata, flags, rc: int):
         print("[on_connect] Connected al broker MQTT")
         print_info(client, userdata, rc, "on_connect")
         # Suscribirse a un tema específico
+        client.subscribe(cfg["topics"]["device"] + cfg["topics"]["status"])
+        client.subscribe('homeassistant/status')
         # mqtt_client.subscribe("homeassistant/status")
-        # print("[on_connect] Subscribed to homeassistant/status topic.")
+        print("[on_connect] Subscribed to homeassistant/status topic.")
         # mqtt_client.subscribe("homeassistant/nodered/status")
-        # print("[on_connect] Subscribed to homeassistant/nodered/status topic.")
-        online_topic = cfg["id"] + cfg["topics"]["availability"]
+        print(f'[on_connect] Subscribed to {cfg["topics"]["device"] + cfg["topics"]["status"]} topic.')
+
+        #online_topic = cfg["id"] + cfg["topics"]["availability"]
+        online_topic = cfg["topics"]["device"] + cfg["topics"]["availability"]
         client.publish(online_topic, "online")
         mqtt_client.publish(online_topic, "online")
+        
         print("[on_connect] Published to " + online_topic+ " topic.")
         mqtt_client.publish(cfg["topics"]["pressure"] + cfg["topics"]["config"], json.dumps(sensehat_device.message_config_pressure("pressure")))
         print(
@@ -240,12 +245,12 @@ def on_subscribe(client, userdata, flags, rc: int):
             + " topic."
         )
         mqtt_client.publish(
-            cfg["id"] + cfg["topics"]["config"],
+            cfg["[topics]"]["device"] + cfg["topics"]["config"],
             json.dumps(sensehat_device.define_sensehat_device())
         )
         print(
             f"[on_subscribe] Published to "
-            + cfg["id"]
+            + cfg["topics"]["device"]
             + cfg["topics"]["config"]
             + " topic."
         )
@@ -306,9 +311,10 @@ def mqtt_connect(param_client: paho.mqtt.client.Client) -> paho.mqtt.client.Clie
     Returns:
         The connected MQTT client object.
     """
-    topic = cfg["id"] + cfg["topics"]["availability"]
+    topic = cfg["topics"]["device"] + cfg["topics"]["availability"]
     # param_client.will_clear()
-    param_client.will_set(topic, "offline")
+    param_client.will_clear()
+    param_client.will_set(cfg["topics"]["device"] + cfg["topics"]["availability"], "offline")
     print(f"[mqtt_connect] Will set to topic {topic} with message 'offline'")
     # Connect to the MQTT broker
     
@@ -328,7 +334,7 @@ def mqtt_connect(param_client: paho.mqtt.client.Client) -> paho.mqtt.client.Clie
         print(f"[mqtt_connect] Message failed to topic {topic} with message 'online'")
     
     dev = sensehat_device.define_sensehat_device();
-    topic_disco = cfg["id"] + "/config";
+    topic_disco = cfg["topics"]["device"] + cfg["topics"]["config"];
     discovery = param_client.publish(topic_disco, json.dumps(dev));
     if discovery.is_published():
         print(f"[mqtt_connect] Message sent to topic {topic_disco} with device info")

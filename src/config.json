@@ -2,6 +2,8 @@
   "id": "homeassistant/sensor/rpi",
   "seconds": 60,
   "topics": {
+    "device": "homeassistant/sensor/rpi",
+    "status": "/status",
     "config": "/config",
     "state": "/state",
     "availability": "/availability",
