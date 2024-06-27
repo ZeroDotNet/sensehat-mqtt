@@ -2,13 +2,16 @@
 import datetime
 import json
 import os
+from struct import Struct
 import sys
 import time
 from typing import Dict
 import ssl
+#from aiohttp import JsonPayload, Payload
 import paho.mqtt.client
 from paho.mqtt.client import MQTTMessageInfo, Client
 from paho.mqtt.client import MQTTMessage
+#from pydantic import Json
 from sensehatdevice import SenseHatDevice
 
 
@@ -81,23 +84,28 @@ def build_mqtt() -> paho.mqtt.client.Client:
     # tls_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH, cafile="../ca.crt")
     # tls_context.load_cert_chain(certfile="../server.crt", keyfile="../server.key", password="majestic")
     # Build the MQTT client with the generated client id, clean session, and TCP transport
-    build_client = paho.mqtt.client.Client(client_id=client_id_alt)
+    build_client = paho.mqtt.client.Client(client_id="sensehat")
     # Set username and password for authentication
     username = cfg["broker"]["username"]
     password = cfg["broker"]["password"]
-    build_client.username_pw_set(username, password)
+    if("" not in password):
+        build_client.username_pw_set(username, password)
     # Configure TLS
-    build_client.tls_set(
-        certfile=cfg["client"]["certfile"],
-        keyfile=cfg["client"]["keyfile"],
-        keyfile_password=cfg["client"]["keyfile_password"],
-        ca_certs=cfg["client"]["ca_certs"],
-        tls_version=ssl.PROTOCOL_TLSv1_2,
-    )
+    if (cfg["client"]["certfile"] != ""):
+        build_client.tls_insecure_set(True)
+        build_client.tls_set(
+            certfile=cfg["client"]["certfile"],
+            keyfile=cfg["client"]["keyfile"],
+            keyfile_password=cfg["client"]["keyfile_password"],
+            ca_certs=cfg["client"]["ca_certs"],
+            tls_version=ssl.PROTOCOL_TLSv1_2,
+        )
+    
     # Configure MQTT client callbacks
+    
     build_client.on_connect = on_connect
     build_client.on_message = on_message
-    build_client.on_subscribe = on_subscribe
+    #build_client.on_subscribe = on_subscribe
     return build_client
 
 
@@ -155,31 +163,22 @@ def on_connect(client: paho.mqtt.client.Client, userdata, flags, rc: int):
         print("[on_connect] Connected al broker MQTT")
         print_info(client, userdata, rc, "on_connect")
         # Suscribirse a un tema específico
-        mqtt_client.subscribe("homeassistant/status")
-        print("[on_connect] Subscribed to homeassistant/status topic.")
-        mqtt_client.subscribe("homeassistant/nodered/status")
-        print("[on_connect] Subscribed to homeassistant/nodered/status topic.")
+        # mqtt_client.subscribe("homeassistant/status")
+        # print("[on_connect] Subscribed to homeassistant/status topic.")
+        # mqtt_client.subscribe("homeassistant/nodered/status")
+        # print("[on_connect] Subscribed to homeassistant/nodered/status topic.")
         online_topic = cfg["id"] + cfg["topics"]["availability"]
-        mqtt_client.publish(online_topic, "online", qos=1, retain=True)
+        client.publish(online_topic, "online")
+        mqtt_client.publish(online_topic, "online")
         print("[on_connect] Published to " + online_topic+ " topic.")
-        mqtt_client.publish(
-            cfg["topics"]["pressure"] + cfg["topics"]["config"],
-            json.dumps(sensehat_device.message_config_pressure("pressure")),
-            qos=1,
-            retain=True,
-        )
+        mqtt_client.publish(cfg["topics"]["pressure"] + cfg["topics"]["config"], json.dumps(sensehat_device.message_config_pressure("pressure")))
         print(
             "[on_connect] Published to "
             + cfg["topics"]["pressure"]
             + cfg["topics"]["config"]
             + " topic."
         )
-        mqtt_client.publish(
-            cfg["topics"]["humidity"] + cfg["topics"]["config"],
-            json.dumps(sensehat_device.message_config_humidity("humidity")),
-            qos=1,
-            retain=True,
-        )
+        mqtt_client.publish(cfg["topics"]["humidity"] + cfg["topics"]["config"],json.dumps(sensehat_device.message_config_humidity("humidity")), qos=1, retain=True)
         print(
             f"[on_connect] Published to "
             + cfg["topics"]["humidity"]
@@ -188,9 +187,7 @@ def on_connect(client: paho.mqtt.client.Client, userdata, flags, rc: int):
         )
         mqtt_client.publish(
             cfg["topics"]["temperature"] + cfg["topics"]["config"],
-            json.dumps(sensehat_device.message_config_temperature("temperature")),
-            qos=1,
-            retain=True,
+            json.dumps(sensehat_device.message_config_temperature("temperature"))
         )
         print(
             f"[on_connect] Published to "
@@ -198,12 +195,12 @@ def on_connect(client: paho.mqtt.client.Client, userdata, flags, rc: int):
             + cfg["topics"]["config"]
             + " topic."
         )
-    elif rc != int(0) and rc[0] != int(0):
-        print(f"[on_connect] Connection error. Return Code: {error_code_message(rc)}")
-    else:
-        print(
-            f"[on_connect] Unexpected Result Code: is int: {rc is int} - {type(rc)} {rc}"
-        )
+    # elif rc != int(0) and rc[0] != int(0):
+    #     print(f"[on_connect] Connection error. Return Code: {error_code_message(rc)}")
+    #else:
+        # print(
+        #     f"[on_connect] Unexpected Result Code: is int: {rc is int} - {type(rc)} {rc}"
+        # )
 
 
 # Function to handle the connection with the broker MQTT
@@ -213,9 +210,7 @@ def on_subscribe(client, userdata, flags, rc: int):
     if rc == int(0) or rc[0] == int(0):
         mqtt_client.publish(
             cfg["topics"]["pressure"] + cfg["topics"]["config"],
-            json.dumps(sensehat_device.message_config_pressure("pressure")),
-            qos=1,
-            retain=True,
+            json.dumps(sensehat_device.message_config_pressure("pressure"))
         )
         print(
             "[on_subscribe] Published to "
@@ -225,9 +220,8 @@ def on_subscribe(client, userdata, flags, rc: int):
         )
         mqtt_client.publish(
             cfg["topics"]["humidity"] + cfg["topics"]["config"],
-            json.dumps(sensehat_device.message_config_humidity("humidity")),
-            qos=1,
-            retain=True,
+            json.dumps(sensehat_device.message_config_humidity("humidity"))
+            
         )
         print(
             f"[on_subscribe] Published to "
@@ -237,9 +231,7 @@ def on_subscribe(client, userdata, flags, rc: int):
         )
         mqtt_client.publish(
             cfg["topics"]["temperature"] + cfg["topics"]["config"],
-            json.dumps(sensehat_device.message_config_temperature("temperature")),
-            qos=1,
-            retain=True,
+            json.dumps(sensehat_device.message_config_temperature("temperature"))
         )
         print(
             f"[on_subscribe] Published to "
@@ -247,8 +239,18 @@ def on_subscribe(client, userdata, flags, rc: int):
             + cfg["topics"]["config"]
             + " topic."
         )
-    elif rc != int(0) or rc[0] != int(0):
-        print(f"[on_subscribe] WARNING: Result Code: {error_code_message(rc)}")
+        mqtt_client.publish(
+            cfg["id"] + cfg["topics"]["config"],
+            json.dumps(sensehat_device.define_sensehat_device())
+        )
+        print(
+            f"[on_subscribe] Published to "
+            + cfg["id"]
+            + cfg["topics"]["config"]
+            + " topic."
+        )
+    # elif rc != int(0) or rc[0] != int(0):
+    #     print(f"[on_subscribe] WARNING: Result Code: {error_code_message(rc)}")
     else:
         print(f"[on_subscribe] Unexpected Result Code: {type(rc)} {rc}")
 
@@ -309,15 +311,32 @@ def mqtt_connect(param_client: paho.mqtt.client.Client) -> paho.mqtt.client.Clie
     param_client.will_set(topic, "offline")
     print(f"[mqtt_connect] Will set to topic {topic} with message 'offline'")
     # Connect to the MQTT broker
+    
     param_client.connect(
         cfg["broker"]["host"], port=cfg["broker"]["port"], keepalive=60
     )
     # Publish an "online" message
-    print(
-        f"[mqtt_connect] Connected to {cfg['broker']['host']}:{cfg['broker']['port']}"
-    )
-    param_client.publish(topic, "online")
-    print(f"[mqtt_connect] Message sent to topic {topic} with message 'online'")
+    print(f"[mqtt_connect] Connected to {cfg['broker']['host']}:{cfg['broker']['port']}")
+    print(f"[mqtt_connect] Username: {cfg['broker']['username']}")
+    
+    info = param_client.publish(topic, "online");
+    
+    #MQTTMessageInfo
+    if info.is_published():
+        print(f"[mqtt_connect] Message sent to topic {topic} with message 'online'")
+    else:
+        print(f"[mqtt_connect] Message failed to topic {topic} with message 'online'")
+    
+    dev = sensehat_device.define_sensehat_device();
+    topic_disco = cfg["id"] + "/config";
+    discovery = param_client.publish(topic_disco, json.dumps(dev));
+    if discovery.is_published():
+        print(f"[mqtt_connect] Message sent to topic {topic_disco} with device info")
+    else:
+        print(f"[mqtt_connect] Message failed to topic {topic_disco} with device info")
+        print(f"[mqtt_connect] {json.dumps(dev)}");
+
+    
     return param_client
 
 
@@ -357,7 +376,9 @@ def run():
         sensehat_device.show_message(f"{counter}")
         mqtt_connect(mqtt_client)
         mqtt_client.loop_start()
+        #mqtt_client.loop_forever()
         while True:
+            mqtt_client.reconnect()
             counter = counter + 1
             metrics = sensehat_device.calculate_metrics()
             json_read = metrics["messages"]["json"]
@@ -395,15 +416,17 @@ def run():
     except KeyboardInterrupt as exc:
         print("KeyboardException, quitting...")
         print(exc)
+    except ConnectionResetError as cre:
+        print("Connection error, sleeping...", cre)
+        print(f"Ex Type: {type(cre)}")
+        # sys.stderr.write(f"Exception: {cre}\n")
+        exit_code = 8
     except BaseException as exx:
         print("UnknownException, quitting...", exx)
-
         print(f"Ex Type: {type(exx)}")
         sys.stderr.write(f"Exception: {exx}\n")
-        sys.stderr.write(f"Traceback: {exx.with_traceback()}\n")
         exit_code = 1
         print("Stop")
-        print(exx.with_traceback())
     finally:
         # client.disconnect()
         # Cerrar la conexión con el broker MQTT
@@ -423,16 +446,21 @@ try:
     sensehat_device = SenseHatDevice(cfg)
 except BaseException as ex:
     print("SenseHat device initialization failed, quitting...", ex)
-    print(ex.with_traceback())
+    # print(ex.with_traceback())
     print(f"Ex Type: {type(ex)}")
     sys.stderr.write(f"Exception: {ex}\n")
-    sys.stderr.write(f"Traceback: {ex.with_traceback()}\n")
+    #sys.stderr.write(f"Traceback: {ex.with_traceback()}\n")
     print("Stop")
-    sys.exit(__status=1)
+    sys.exit(1)
 
 if __name__ == "__main__":
     # Main Program
     ec = run()
+    while ec == 8:
+        time.sleep(300)
+        ec = run()
+    
+    
     sys.exit(ec)
 
     # end

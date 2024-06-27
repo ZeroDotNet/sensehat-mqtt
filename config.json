@@ -1,6 +1,6 @@
 {
   "id": "homeassistant/sensor/rpi",
-  "seconds": 30,
+  "seconds": 60,
   "topics": {
     "config": "/config",
     "state": "/state",
@@ -15,17 +15,18 @@
     "json": "homeassistant/sensor/rpi/debug"
   },
   "client": {
-    "ca_certs": "/home/npascual/code/sensehat-mqtt/src/ca.crt",
-    "certfile": "/home/npascual/code/sensehat-mqtt/src/server.crt",
-    "keyfile": "/home/npascual/code/sensehat-mqtt/src/server.key",
-    "keyfile_password": "majestic",
+    "ca_certs": "/home/npascual/code/sensehat-mqtt/src/chain.pem",
+    "certfile": "",
+    "keyfile": "/home/npascual/code/sensehat-mqtt/src/privkey.pem",
+    "keyfile_password": "",
     "cleansession": true,
     "insecure": true
   },
   "broker": {
-    "port": 8883,
-    "host": "hass.hawkantsoftware.com",
-    "username": "admin",
-    "password": "majestic"
+    "ssl": false,
+    "port": 1883,
+    "host": "192.168.1.101",
+    "username": "sensehat",
+    "password": "sapopepe!!!"
   }
 }

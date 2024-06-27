@@ -23,7 +23,7 @@ client.will_set('raspberry/status', b'{"status": "offline", "client": "subscribe
 #client.('raspberry/status', b'{"status": "offline", "client": "subscriber"}')
 
 # Create connection, the three parameters are broker address, broker port number, and keep-alive time respectively
-client.connect("192.168.1.102", 1883, 60)
+client.connect("192.168.1.101", 1883, 60)
 
 # Set the network loop blocking, it will not actively end the program before calling disconnect() or the program crash
 client.loop_forever()

@@ -3,10 +3,13 @@ Represents a SenseHat device and provides methods to calculate various metrics.
 :copyright: (c) 2022-present Dan Rodrigues
 :license: MIT, see LICENSE for more details.
 """
+from operator import concat
+
 from typing import Dict
 import datetime
 import os
 import sys
+from xml.sax import default_parser_list
 from sense_hat import SenseHat
 
 
@@ -14,6 +17,7 @@ class SenseHatDevice:
     """
     Represents a SenseHat device and provides methods to calculate various metrics.
     """
+    
 
     def __init__(self, config: Dict[str, str | Dict[str, str]] | None):
         """
@@ -146,6 +150,7 @@ class SenseHatDevice:
             "availability_topic": self.cfg["id"] + self.cfg["topics"]["availability"],
             "state_topic": self.cfg["topics"][sensor] + self.cfg["topics"]["state"],
             "unit_of_measurement": "°C",
+            "state_class": "measurement",
             "temperature_unit": "C",
             "icon": "mdi:temperature-celsius",
             "name": "Temperature",
@@ -202,6 +207,116 @@ class SenseHatDevice:
     def show_message(self, message):
         #self.sense.clear()
         self.sense.show_message(message)
+
+    # create a function to define a device with a few sensors for home assistant by using mqtt discovery feature.
+    def define_device(self, device_name: str, device_id: str, availability_topic: str, state_topic: str, device_class: str, unit_of_measurement: str, icon: str, name: str, unique_id: str, model: str, manufacturer: str) -> Dict[str, str | Dict[str, str]]:
+        """
+        Define a device with multiple sensors for Home Assistant using MQTT discovery feature.
+
+        Args:
+            device_name (str): The name of the device.
+            device_id (str): The unique ID of the device.
+            availability_topic (str): The availability topic of the device.
+            state_topic (str): The state topic of the device.
+            device_class (str): The class of the device.
+            unit_of_measurement (str): The unit of measurement of the device.
+            icon (str): The icon of the device.
+            name (str): The name of the device.
+            unique_id (str): The unique ID of the device.
+            model (str): The model of the device.
+            manufacturer (str): The manufacturer of the device.
+
+        Returns:
+            dict: A dictionary containing the message configuration for the device.
+        """
+        message = {
+            "device_class": device_class,
+            "availability_topic": availability_topic,
+            "state_topic": state_topic,
+            "unit_of_measurement": unit_of_measurement,
+            "icon": icon,
+            "name": name,
+            "unique_id": unique_id,
+            "device": {
+                "identifiers": device_id,
+                "name": device_name,
+                "sw_version": "1.0",
+                "model": model,
+                "manufacturer": manufacturer,
+            },
+        }
+        return message
+
+
+
+    def define_sensehat_device(self):
+        """
+        Define a SenseHat device with multiple sensors for Home Assistant using MQTT discovery feature.
+        """
+        # Define the configuration for the device
+        device_name = "SenseHat"
+        device_id = "sensehat01rpi"
+        availability_topic = self.cfg["id"] + self.cfg["topics"]["availability"]
+        model = "Raspberry Pi 4 Model B+"
+        manufacturer = "Raspberry Pi Foundation"
+
+        # Define and publish the message configurations for each sensor
+        humidity_config = self.define_device(
+            device_name=device_name,
+            device_id=device_id,
+            availability_topic=availability_topic,
+            state_topic=self.cfg["topics"]["humidity"] + self.cfg["topics"]["state"],
+            device_class="humidity",
+            unit_of_measurement="%",
+            icon="mdi:water-percent",
+            name="Humidity",
+            unique_id="hum01rpi",
+            model=model,
+            manufacturer=manufacturer,
+        )
+        
+
+        pressure_config = self.define_device(
+            device_name=device_name,
+            device_id=device_id,
+            availability_topic=availability_topic,
+            state_topic=self.cfg["topics"]["pressure"] + self.cfg["topics"]["state"],
+            device_class="pressure",
+            unit_of_measurement="hPa",
+            icon="mdi:axis-arrow",
+            name="Pressure",
+            unique_id="pre01rpi",
+            model=model,
+            manufacturer=manufacturer,
+        )
+        
+        state_topic =(self.cfg["topics"]["temperature"].join(self.cfg["topics"]["state"])).lower()
+        temperature_config = self.define_device(
+            device_name=device_name,
+            device_id=device_id,
+            availability_topic=availability_topic,
+            state_topic=state_topic,
+            device_class="temperature",
+            unit_of_measurement="°C",
+            icon="mdi:temperature-celsius",
+            name="Temperature",
+            unique_id="temp01rpi",
+            model=model,
+            manufacturer=manufacturer,
+        )
+
+        # return an object with the message configurations for each sensors
+        return {
+            "humidity": humidity_config,
+            "pressure": pressure_config,
+            "temperature": temperature_config
+        }
+        
+            
+        
+        
+
+
 
 
 

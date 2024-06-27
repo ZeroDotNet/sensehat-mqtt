@@ -20,6 +20,6 @@ client.on_connect = on_connect
 client.on_message = on_message
 client.will_clear()
 client.will_set('raspberry/status', b'{"status": "offline", "client": "publisher"}')
-client.connect("192.168.1.102", 1883, 60)
+client.connect("192.168.1.101", 1883, 60)
 
 client.loop_forever()
