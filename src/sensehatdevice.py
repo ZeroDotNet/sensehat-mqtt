@@ -256,7 +256,7 @@ class SenseHatDevice:
         # Define the configuration for the device
         device_name = "SenseHat"
         device_id = "sensehat01rpi"
-        availability_topic = self.cfg["id"] + self.cfg["topics"]["availability"]
+        availability_topic = self.cfg["topics"]["device"] + self.cfg["topics"]["availability"]
         model = "Raspberry Pi 4 Model B+"
         manufacturer = "Raspberry Pi Foundation"
 
@@ -307,6 +307,11 @@ class SenseHatDevice:
 
         # return an object with the message configurations for each sensors
         return {
+            "device_name": device_name,
+            "device_id": device_id,
+            "availability_topic": availability_topic,
+            "model": model,
+            "manufacturer": manufacturer,
             "humidity": humidity_config,
             "pressure": pressure_config,
             "temperature": temperature_config

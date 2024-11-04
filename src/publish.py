@@ -100,9 +100,9 @@ def build_mqtt() -> paho.mqtt.client.Client:
             ca_certs=cfg["client"]["ca_certs"],
             tls_version=ssl.PROTOCOL_TLSv1_2,
         )
-    
+
     # Configure MQTT client callbacks
-    
+
     build_client.on_connect = on_connect
     build_client.on_message = on_message
     #build_client.on_subscribe = on_subscribe
@@ -174,7 +174,7 @@ def on_connect(client: paho.mqtt.client.Client, userdata, flags, rc: int):
         online_topic = cfg["topics"]["device"] + cfg["topics"]["availability"]
         client.publish(online_topic, "online")
         mqtt_client.publish(online_topic, "online")
-        
+
         print("[on_connect] Published to " + online_topic+ " topic.")
         mqtt_client.publish(cfg["topics"]["pressure"] + cfg["topics"]["config"], json.dumps(sensehat_device.message_config_pressure("pressure")))
         print(
@@ -226,7 +226,7 @@ def on_subscribe(client, userdata, flags, rc: int):
         mqtt_client.publish(
             cfg["topics"]["humidity"] + cfg["topics"]["config"],
             json.dumps(sensehat_device.message_config_humidity("humidity"))
-            
+
         )
         print(
             f"[on_subscribe] Published to "
@@ -317,22 +317,22 @@ def mqtt_connect(param_client: paho.mqtt.client.Client) -> paho.mqtt.client.Clie
     param_client.will_set(cfg["topics"]["device"] + cfg["topics"]["availability"], "offline")
     print(f"[mqtt_connect] Will set to topic {topic} with message 'offline'")
     # Connect to the MQTT broker
-    
+
     param_client.connect(
         cfg["broker"]["host"], port=cfg["broker"]["port"], keepalive=60
     )
     # Publish an "online" message
     print(f"[mqtt_connect] Connected to {cfg['broker']['host']}:{cfg['broker']['port']}")
     print(f"[mqtt_connect] Username: {cfg['broker']['username']}")
-    
+
     info = param_client.publish(topic, "online");
-    
+
     #MQTTMessageInfo
     if info.is_published():
         print(f"[mqtt_connect] Message sent to topic {topic} with message 'online'")
     else:
         print(f"[mqtt_connect] Message failed to topic {topic} with message 'online'")
-    
+
     dev = sensehat_device.define_sensehat_device();
     topic_disco = cfg["topics"]["device"] + cfg["topics"]["config"];
     discovery = param_client.publish(topic_disco, json.dumps(dev));
@@ -342,7 +342,7 @@ def mqtt_connect(param_client: paho.mqtt.client.Client) -> paho.mqtt.client.Clie
         print(f"[mqtt_connect] Message failed to topic {topic_disco} with device info")
         print(f"[mqtt_connect] {json.dumps(dev)}");
 
-    
+
     return param_client
 
 
@@ -380,11 +380,12 @@ def run():
     try:
         counter = 1
         sensehat_device.show_message(f"{counter}")
-        mqtt_connect(mqtt_client)
+        #mqtt_connect(mqtt_client)
         mqtt_client.loop_start()
+        mqtt_connect(mqtt_client)
         #mqtt_client.loop_forever()
         while True:
-            mqtt_client.reconnect()
+            # -- mqtt_client.reconnect()
             counter = counter + 1
             metrics = sensehat_device.calculate_metrics()
             json_read = metrics["messages"]["json"]
@@ -420,28 +421,40 @@ def run():
             print(f"Sleeping for {seconds} seconds.")
             time.sleep(seconds)
     except KeyboardInterrupt as exc:
+        #client.loop_stop();
+        #client.disconnect();
         print("KeyboardException, quitting...")
         print(exc)
+        mqtt_client.loop_stop();
+        mqtt_client.disconnect();
     except ConnectionResetError as cre:
+        #client.loop_stop();
+        #client.disconnect();
         print("Connection error, sleeping...", cre)
         print(f"Ex Type: {type(cre)}")
         # sys.stderr.write(f"Exception: {cre}\n")
         exit_code = 8
+        mqtt_client.loop_stop();
+        mqtt_client.disconnect();
     except BaseException as exx:
+        #client.loop_stop();
+        #client.disconnect();
         print("UnknownException, quitting...", exx)
         print(f"Ex Type: {type(exx)}")
         sys.stderr.write(f"Exception: {exx}\n")
         exit_code = 1
         print("Stop")
+        mqtt_client.loop_stop();
+        mqtt_client.disconnect();
     finally:
         # client.disconnect()
         # Cerrar la conexión con el broker MQTT
         print("Quitting...Closing loop and connection...")
-        mqtt_client.loop_stop()
-        mqtt_client.disconnect()
+        #mqtt_client.loop_stop()
+        #mqtt_client.disconnect()
         current_time = datetime.datetime.now()
         print(f"[{current_time}] Exit! Done!")
-        
+
     return exit_code
 
 cfg = load_configuration()
@@ -465,8 +478,8 @@ if __name__ == "__main__":
     while ec == 8:
         time.sleep(300)
         ec = run()
-    
-    
+
+
     sys.exit(ec)
 
     # end
